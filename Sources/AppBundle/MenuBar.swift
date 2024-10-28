@@ -2,7 +2,19 @@ import Common
 import Foundation
 import SwiftUI
 
-public func menuBar(viewModel: TrayMenuModel) -> some Scene {
+@MainActor func renderIcon(text: String) -> some View  {
+    let renderer = ImageRenderer(content: Text(text).font(.system(size:14, design: .monospaced)))
+    // using 1.0 (the default) as a scale results in a blurry image,
+    // maybe related to how OSX renders everything 2x the size and downscales accordingly
+    renderer.scale = 2.0
+    if let image =  renderer.nsImage {
+        return Image(nsImage: image)
+    }
+    
+    return Text("❌")
+}
+
+@MainActor public func menuBar(viewModel: TrayMenuModel) -> some Scene {
     MenuBarExtra {
         let shortIdentification = "\(aeroSpaceAppName) v\(aeroSpaceAppVersion) \(gitShortHash)"
         let identification      = "\(aeroSpaceAppName) v\(aeroSpaceAppVersion) \(gitHash)"
@@ -56,7 +68,10 @@ public func menuBar(viewModel: TrayMenuModel) -> some Scene {
         }.keyboardShortcut("Q", modifiers: .command)
     } label: {
         // .font(.system(.body, design: .monospaced)) doesn't work unfortunately :(
-        Text(viewModel.isEnabled ? viewModel.trayText : "⏸️")
+        if viewModel.isEnabled {
+            renderIcon(text: viewModel.trayText)}
+        else{
+            Text("⏸️")}
     }
 }
 
